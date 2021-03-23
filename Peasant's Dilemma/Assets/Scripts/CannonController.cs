@@ -39,14 +39,14 @@ public class CannonController : MonoBehaviour
         } 
         else if (Input.GetMouseButtonUp(0) && isCannonReady)
         {
-            FireCannon((int) currentPower * 50);
+            FireCannon((int) currentPower * 500);
             StartCoroutine(CannonCooldown());
         }
     }
 
     void FireCannon(int power)
     {
-        Instantiate(cannonBall, muzzle.transform.position, muzzle.transform.rotation);
+        Instantiate(cannonBall, muzzle.transform.position + new Vector3(1f,2f,3f), muzzle.transform.rotation);
         cannonBallRB.AddForce(transform.right * power, ForceMode.Impulse);
         isCannonReady = false;
         cannonReadyText.text = "Hang on!";
@@ -62,7 +62,6 @@ public class CannonController : MonoBehaviour
     void CalculateAngle()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = 0;
         Vector3 direction = mousePosition - transform.position;
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         UpdateAngle((int) angle);
@@ -71,9 +70,8 @@ public class CannonController : MonoBehaviour
     void CalculatePower()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePosition.z = 0;
         float distance = Vector3.Distance(mousePosition, transform.position);
-        UpdatePower((int) distance * 2);
+        UpdatePower((int) distance);
     }
 
     void UpdatePower(int amount)
