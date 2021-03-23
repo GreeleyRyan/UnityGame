@@ -1,46 +1,90 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class CannonController : MonoBehaviour
 {
     public GameObject cannonBall;
+    public TextMeshProUGUI currentPowerText;
+    public TextMeshProUGUI cannonReadyText;
+    public TextMeshProUGUI currentAngleText;
+    public Transform muzzle;
     //public ParticleSystem cannonSmoke;
 
-    private float rotationSpeed = 50.0f;
+    private float minPower = 0f;
+    private float maxPower = 100.0f;
+    private float currentPower;
+    private int currentAngle;
     private bool isCannonReady;
-    private Rigidbody cannonRB;
+    private Rigidbody cannonBallRB;
     // Start is called before the first frame update
     void Start()
     {
         isCannonReady = true;
-        cannonRB = GetComponent<Rigidbody>();
+        currentPowerText.text = "Power: " + minPower;
+        cannonReadyText.text = "Cannon is Ready!";
+        currentAngleText.text = "Current Angle: " + currentAngle;
+        cannonBallRB = cannonBall.GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        transform.Rotate(Vector3.up, horizontalInput * rotationSpeed * Time.deltaTime);
-        float verticalInput = Input.GetAxis("Vertical");
-        transform.Rotate(Vector3.right, verticalInput * rotationSpeed * Time.deltaTime);
-
-        if (Input.GetKeyDown(KeyCode.Space) && isCannonReady)
+        if (Input.GetMouseButton(0) && isCannonReady)
         {
-            FireCannon();
+            CalculateAngle();
+            CalculatePower();
+        } 
+        else if (Input.GetMouseButtonUp(0) && isCannonReady)
+        {
+            FireCannon((int) currentPower * 50);
             StartCoroutine(CannonCooldown());
         }
     }
 
-    void FireCannon()
+    void FireCannon(int power)
     {
-        Instantiate(cannonBall, new Vector3(0f,3.0f,1.9f), cannonBall.transform.rotation);
+        Instantiate(cannonBall, muzzle.transform.position, muzzle.transform.rotation);
+        cannonBallRB.AddForce(transform.right * power, ForceMode.Impulse);
         isCannonReady = false;
+        cannonReadyText.text = "Hang on!";
     }
 
     IEnumerator CannonCooldown()
     {
         yield return new WaitForSeconds(3);
         isCannonReady = true;
+        cannonReadyText.text = "Cannon is Ready!";
+    }
+
+    void CalculateAngle()
+    {
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0;
+        Vector3 direction = mousePosition - transform.position;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        UpdateAngle((int) angle);
+    }
+
+    void CalculatePower()
+    {
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePosition.z = 0;
+        float distance = Vector3.Distance(mousePosition, transform.position);
+        UpdatePower((int) distance * 2);
+    }
+
+    void UpdatePower(int amount)
+    {
+        currentPower = Mathf.Clamp(amount, minPower, maxPower);
+        currentPowerText.text = "Power: " + currentPower;
+    }
+
+    void UpdateAngle(int angle)
+    {
+        currentAngle = angle;
+        currentAngleText.text = "Current Angle: " + currentAngle;
     }
 }
